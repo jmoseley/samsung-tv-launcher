@@ -16,7 +16,7 @@
     "debug": "bash tools/debug.sh",
     "undebug": "bash tools/undebug.sh",
     "test-tv": "node tools/tv-test.js",
-    "preview": "python3 -m http.server 4173 --directory launcher"
+    "preview": "python3 -m http.server 4173 --bind 127.0.0.1 --directory launcher"
   },
   "dependencies": {
     "ws": "8.22.0"

@@ -48,8 +48,8 @@ function portOpen(ip, port) {
   const sameNet = mine.filter((a) => a.split('.').slice(0, 3).join('.') === ip.split('.').slice(0, 3).join('.'));
 
   let paired = false, pairingError = '';
-  try { paired = Boolean(readPairing().token); } catch (e) { pairingError = e.message; }
-  check(paired, '2. Paired', 'tv-token.json has a token', pairingError || 'run `npm run pair` and have the person press Allow on the TV');
+  try { paired = Boolean(readPairing(ip).token); } catch (e) { pairingError = e.message; }
+  check(paired, '2. Paired', `tv-token.json has a token for ${ip}`, pairingError || 'run `npm run pair` and have the person press Allow on the TV');
 
   const devOn = d.developerMode === '1';
   const devOk = devOn && sameNet.includes(d.developerIP);

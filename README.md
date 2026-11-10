@@ -57,13 +57,17 @@ If your remote has no number buttons, send them over Wi-Fi. The TV asks you to p
 ```bash
 npm run key -- KEY_1 KEY_2 KEY_3 KEY_4 KEY_5
 ```
-Send the IP digits the same way. Use `KEY_RIGHT` to move to the next box.
+To send the IP, switch Developer mode on and move to the first IP box. Then run this with your computer's IP:
+```bash
+npm run key -- --ip 192.168.1.20
+```
+It types each part and presses `KEY_RIGHT` between the boxes. The boxes don't move on by themselves. Don't press left or right while the On/Off switch is selected, because that turns Developer mode off again. Press **OK** at the bottom of the pop-up when the address looks right.
 
 **4. Restart the TV**
-The power button only puts the TV to sleep. Unplug it for 60 seconds, then turn it on again. Developer Mode only starts after a full restart.
+A short press of the power button only puts the TV to sleep. Hold the power button on the remote for about 5–7 seconds, until the Samsung logo appears. Or unplug the TV for 60 seconds, then turn it on again. Developer Mode only starts after a full restart.
 
 **5. Make your certificate**
-Open `~/tizen-studio/tools/certificate-manager/Certificate-manager.app`. Click **+**, choose **Samsung → TV**, and name the profile **tv**. Sign in with your Samsung account. For the distributor certificate, choose **Public**. The app fills in your TV's ID. Keep the certificate and its password private, and back them up.
+Open `~/tizen-studio/tools/certificate-manager/Certificate-manager.app`. Click **+**, choose **Samsung → TV**, and name the profile **tv**. Sign in with your Samsung account. The sign-in opens in your browser, and **Continue with Google** works there if you don't have a Samsung account. For the distributor certificate, choose **Public**. The app fills in your TV's ID. Keep the certificate and its password private, and back them up.
 
 **6. Get logos and wallpapers (optional)**
 ```bash
@@ -84,7 +88,7 @@ When you turn on the TV, you see its last input for about a second. If nothing i
 
 To open Samsung's home on purpose, press Back twice quickly on the launcher. The launcher then stays away for two minutes.
 
-Some TVs have **Settings → General & Privacy → Start Screen Option → Autorun Last App**. If yours does, turn it on.
+Some TVs have **Autorun Last App** under **Start Screen Options**. If yours does, turn it on. On 2025 models it's in **Settings → All Settings → Advanced Features**. On 2022–2024 models it's in **Settings → All Settings → General & Privacy**. Samsung Smart Monitors such as the M7 don't have it. On those, turn on **Start with Smart Hub Home** in the same menu instead.
 
 **9. Phone remote (optional)**
 `remote/` is an iPhone app. It has arrows, OK, Back, volume, mute, power, and a button for the next wallpaper. Its Home button opens the launcher directly, so you never see Samsung's home. It can also wake the TV with Wake-on-LAN, and it shows a keyboard when the TV asks for text.
@@ -117,7 +121,7 @@ To turn off Developer Mode, go back to Apps → App Settings, type 12345, and sw
 
 | Tool | What it does |
 |---|---|
-| `tools/tv.js` | Sends remote keys over Wi-Fi (`npm run key -- KEY_HOME`) |
+| `tools/tv.js` | Sends remote keys over Wi-Fi (`npm run key -- KEY_HOME`), an IP into Developer Mode (`--ip`), or text into the TV's keyboard (`--text`). Pairing is saved per TV, so set `TV_IP=<ip>` to control a second TV. |
 | `tools/doctor.js` | Checks each setup step (`npm run doctor`) |
 | `tools/find-tv.js` | Finds Samsung TVs on your network |
 | `tools/deploy.sh` | Packages, signs, installs, and starts the launcher |

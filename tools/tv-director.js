@@ -11,7 +11,7 @@ const { execFileSync, spawn } = require('child_process');
 const { ROOT, TIZEN, settings, openRemote, readPairing } = require('./lib');
 
 const TV_IP = settings().ip;
-const TOKEN = readPairing().token;
+const TOKEN = readPairing(TV_IP).token;
 if (!TOKEN) { console.error('Pair first: npm run pair'); process.exit(1); }
 const NAME = Buffer.from('TVLauncherSetup').toString('base64');
 const OUT = path.join(ROOT, 'takes');

@@ -26,20 +26,26 @@ pass, and run it again after each step. Works on macOS and Linux (Windows: use W
 Check: `tv.json` has an IP. If nothing is found, ask the person to turn the TV on and confirm the Wi-Fi.
 
 **2. Pair the remote API.** `npm run pair` triggers an **Allow** prompt on the TV **(person: press Allow)**.
-Check: `tv-token.json` exists.
+Check: `npm run doctor` passes step 2 (`tv-token.json` has a token for the TV's IP).
+
+**More than one TV.** `tv-token.json` keeps a separate token and certificate fingerprint for each TV's IP, so pairing a second TV doesn't touch the first. Point any command at another TV with `TV_IP=<ip>` (for example `TV_IP=<ip> npm run doctor`), or rerun `npm run find-tv -- <ip>` to make it the default in `tv.json`.
 
 **3. Developer Mode.** Skip steps 3–4 if `npm run doctor` already passes them. Ask the person to open **Apps → App Settings** on the TV (the settings page inside Apps, not the main Settings menu) **(person)**. Then send `npm run key -- KEY_1 KEY_2 KEY_3 KEY_4 KEY_5`.
-A "Developer Mode" pop-up should open. The person switches it **On**; you can type the computer's IP (the one find-tv prints, on the TV's network) with `npm run key -- KEY_1 KEY_9 KEY_2` etc., using `KEY_RIGHT` between the four boxes (some firmware jumps ahead on its own after 3 digits). `KEY_ENTER` toggles the switch and presses OK.
-Check: `curl -s http://<tv-ip>:8001/api/v2/` shows `"developerMode":"1"` and the right `developerIP`.
+A "Developer Mode" pop-up should open. The person switches it **On** and moves focus to the first **Host PC IP** box. Then type the computer's IP (the one find-tv prints, on the TV's network) with `npm run key -- --ip <host-ip>`. That sends each part of the address with `KEY_RIGHT` between the four boxes. The boxes don't move on by themselves after 3 digits, and extra digits are dropped, so never type the address as one run of digits.
+Don't send `KEY_LEFT` or `KEY_RIGHT` while focus is on the On/Off switch. That flips Developer Mode back off and hides the IP boxes. If the boxes disappear, have the person switch it On again and focus the first box, then resend `--ip`.
+Ask the person to check the address on screen, then press the **OK** button at the bottom of the pop-up to save. `KEY_ENTER` also toggles the switch, so only send it when focus is on OK. The setting takes effect after the full restart in step 4.
+Check: `curl -s http://<tv-ip>:8001/api/v2/` shows `"developerMode":"1"` and the right `developerIP` (after step 4).
 If the pop-up doesn't open: confirm they're on the App Settings page; try again with slower keys (`KEY_DELAY_MS=1200 npm run key -- ...`).
 
-**4. Full restart.** **(person: unplug the TV for 60 seconds, then turn it on.)** The power button only sleeps it.
+**4. Full restart.** The power button tap only sleeps the TV. **(person: either hold the Power button on the remote for about 5–7 seconds, past the screen going black, until the Samsung boot logo appears, or unplug the TV for 60 seconds and turn it on.)** Holding Power is easier for a wall-mounted TV. The TV may install a pending update while it restarts; wait for it to finish.
 Check: `nc -z <tv-ip> 26101` succeeds. If not, it wasn't a full restart.
 
 **5. Tizen tools.** Need `~/tizen-studio/tools/sdb` and `~/tizen-studio/tools/ide/bin/tizen`. If missing, ask first (about 1–2 GB, ~10 min), then install the Tizen Studio CLI (on Apple Silicon, Rosetta first) and the Samsung extensions; commands are in README step 1. Linux/Windows: same tools under the Tizen Studio install folder (`sdb.exe`, `tizen.bat`).
 Check: `~/tizen-studio/tools/sdb connect <tv-ip>` then `~/tizen-studio/tools/sdb devices` lists the TV.
 
 **6. Certificate.** There's no command-line way to make a Samsung certificate; the person does it in the window you open. Open `~/tizen-studio/tools/certificate-manager/Certificate-manager.app` for the person: **+ → Samsung → TV**, profile name **tv**, Samsung account sign-in, distributor privilege **Public**, TV id auto-filled **(person)**.
+Sign-in opens in the person's normal web browser. If they don't have a Samsung account, or their Samsung account is linked to Google, **Continue with Google** works there; it signs in or creates a free Samsung account. The browser then hands back to Certificate Manager.
+Another TV needs its own DUID in the distributor certificate. Make a new distributor certificate for the **tv** profile and list every TV's DUID (the author certificate stays the same). Or make a second profile and select it with `CERT_PROFILE=<name>` or `certProfile` in `tv.json`.
 Check: `~/tizen-studio/tools/ide/bin/tizen security-profiles list` shows `tv`.
 
 **7. Choose apps.** Run `npm run apps` and show the list. Ask which apps they want in the dock, then write `launcher/config.local.js` (copy `config.local.example.js`). Each tile needs `title` and `match: ['<app id>', '<name>']`; set `bg` to a brand-ish gradient. For a console or cable box, add `{ title, source: 'HDMIn' }`. Ask for a city if they want weather, and set `weather.latitude/longitude`.
@@ -52,7 +58,7 @@ Check: `curl -s http://<tv-ip>:8001/api/v2/applications/TVLauncher.Launcher` sho
 **10. Verify.** `npm run test-tv` (after `npm run debug`). Expect all key checks to PASS and ~0 janky frames.
 Then always run `npm run undebug`. Debug mode leaves a DevTools port open on the TV that anyone on the Wi-Fi could reach.
 
-**11. Power-on.** The launcher reopens itself after power-on and after leaving apps. If the TV has **Autorun Last App** (Settings → General & Privacy → Start Screen Option), have the person turn it on. If power-on briefly shows "cable disconnected" or static, ask if a soundbar is on an HDMI ARC port and set `idleSource: 'HDMI<n>'` in `config.local.js` (shows black instead). List inputs with `npm run debug`, then `node tools/tv-debug.js eval "..."` using `tizen.systeminfo.getPropertyValue('VIDEOSOURCE', ...)`.
+**11. Power-on.** The launcher reopens itself after power-on and after leaving apps. If the TV has **Autorun Last App**, have the person turn it on. It's under **Start Screen Options**: Settings → All Settings → Advanced Features on 2025 models, or Settings → All Settings → General & Privacy on 2022–2024 models. Some models, including Samsung Smart Monitors such as the M7, don't have Autorun Last App. There, turn on **Start with Smart Hub Home** in the same menu, so power-on doesn't stop on the monitor's "Home / Power off" prompt. If power-on briefly shows "cable disconnected" or static, ask if a soundbar is on an HDMI ARC port and set `idleSource: 'HDMI<n>'` in `config.local.js` (shows black instead). List inputs with `npm run debug`, then `node tools/tv-debug.js eval "..."` using `tizen.systeminfo.getPropertyValue('VIDEOSOURCE', ...)`.
 Check (ask the person first, it turns the TV off): `npm run key -- KEY_POWER`, wait 10 s, again; the launcher is in front (`curl -s http://<tv-ip>:8001/api/v2/applications/<app id>` shows `"visible":true`).
 
 **12. Phone remote (optional, ask first).** Needs a Mac with Xcode, `brew install xcodegen`, and an Apple ID signed into Xcode (Settings → Accounts) **(person)**.
@@ -73,7 +79,8 @@ No Mac or no Xcode: offer the iPhone Shortcut in README step 9 instead (Home wit
 |---|---|
 | 12345 does nothing | Must be on **Apps → App Settings**, not the Apps grid or TV Settings |
 | Not sure which steps are done | `npm run doctor` |
-| `sdb` can't connect / port 26101 closed | Developer Mode needs a full restart (unplug); Host PC IP must be this computer's |
+| `sdb` can't connect / port 26101 closed | Developer Mode needs a full restart (hold Power until the boot logo, or unplug); Host PC IP must be this computer's |
+| Developer Mode IP boxes disappeared | `KEY_LEFT`/`KEY_RIGHT` hit the On/Off switch and turned it off; switch it On, focus the first box, resend `--ip` |
 | `sdb shell ...` prints `closed` | Normal on retail TVs; use the tools here instead of a shell |
 | `debug.sh` finds no port | Retry; it closes the app first, and the TV needs a few seconds |
 | Install fails with a certificate error | Profile must be a **Samsung** certificate with this TV's id; re-create it |
